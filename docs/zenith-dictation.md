@@ -197,6 +197,9 @@ The Android IME is **not implemented yet**. It will capture the mic, stream the
 frames, show `PARTIAL` as `setComposingText`, and commit `RESULT` with
 `commitText`.
 
+Decision record for the placement of the live layer:
+`~/zenith-audio/docs/adr/0001-live-text-in-the-bridge.md`.
+
 ---
 
 ## 5. Why this model, not another
