@@ -4,10 +4,17 @@
 > proposed upstream as-is. It records what this checkout was used for, why the
 > changes exist, and what a future maintainer/LLM needs to know.
 >
-> **Last updated:** 2026-11-08
+> **Last updated:** 2026-11-20
 > **Companion docs:**
 > `~/zenith-audio/docs/phone-dictation.md` (architecture and decisions),
 > `~/zenith-audio/bridge/README.md` (bridge usage and protocol).
+>
+> **2026-11-20 — #252 is fixed upstream and in Hex.** `handy-computer/transcribe.cpp`
+> `869f03bc` (v0.4.2, 2026-11-11) drops the padding mel frame before the encoder;
+> Hex carried it on 2026-11-20 by cherry-picking it onto its pinned fork
+> (`anomalyco/hex` #2076), so `dev` now pins `60bed89`. The local patch below is
+> **obsolete: do not reapply it**. Applying it on a build that already has the
+> upstream fix removes one frame too many.
 
 ---
 
@@ -79,8 +86,10 @@ while speaking, and have the final text inserted into the phone's focused field
    The model lives in `~/.local/share/hex/models/custom/`.
 
 4. **Patched `transcribe.cpp` for the Parakeet v3 frame bug (#252).**
-   The pinned dependency is `anomalyco/transcribe.cpp` at rev `2778ae4`. The
-   patch is local (not upstream) and lives in the Zenith repo:
+   *Obsolete since 2026-11-20: the fix is upstream and in Hex's pin (§3). Do not
+   reapply. The steps below are kept as the historical record.*
+   The pinned dependency was `anomalyco/transcribe.cpp` at rev `2778ae4`. The
+   patch lived in the Zenith repo:
    `~/zenith-audio/docs/patches/transcribe-cpp-252-compact-last-mel-frame.patch`.
 
    The checkout is at:
@@ -116,7 +125,13 @@ while speaking, and have the final text inserted into the phone's focused field
 
 ## 3. The Parakeet v3 frame bug (#252) and the real fix
 
-This is the most important local change and the easiest to lose.
+> **Resolved 2026-11-20 — do not apply the patch any more.** The fix is upstream
+> (`handy-computer/transcribe.cpp` `869f03bc`, v0.4.2) and Hex now pins a fork
+> that carries it (`60bed89`, cherry-picked in `anomalyco/hex` #2076). This
+> section stays because the diagnosis is what made the fix quick to accept; the
+> patch it describes is obsolete.
+
+This was the most important local change and the easiest to lose.
 
 **Symptom.** The stock Parakeet v3 (and the `-30s` fine-tune, same architecture)
 returns **empty** or **truncated** text for roughly one clip length in eight.
@@ -336,9 +351,9 @@ Paths:
   the model id. None of this is upstream Hex.
 - **Upstream Hex:** the `dev` branch was fast-forwarded to `62a40669`; no
   source files were modified except the external dependency checkout.
-- **The patch** is a local change to a pinned dependency; it is not in this
-  repository's git history. The durable copy is the `.patch` file in the Zenith
-  repo. If the checkout is updated, reapply it and rebuild.
+- **The patch** was a local change to a pinned dependency; it is not in this
+  repository's git history. It is obsolete: upstream v0.4.2 and Hex's pin
+  `60bed89` carry the fix, and a build with both would drop two frames.
 - **The bridge** is in the Zenith repo, not Hex; it uses Hex through the
   published SDK and the embedded service.
 
@@ -373,9 +388,9 @@ If you continue this work:
 - Do not "fix" the model choice by switching to stock Parakeet v3 (pt-PT,
   language drift) or `tagarela-v2` (1024-token English lineage). The chosen
   model is the `-30s` v3 fine-tune, imported as `custom-7d13a4fb474b2100`.
-- Do not remove the transcribe.cpp #252 patch; without it, batch dictation
-  returns empty/truncated text on ~1/8 of clip lengths. Reapply the patch from
-  `~/zenith-audio/docs/patches/` if the checkout changes.
+- The transcribe.cpp #252 patch is **obsolete as of 2026-11-20**; do not reapply
+  it. Upstream `869f03bc` (v0.4.2) and Hex's pin `60bed89` carry the fix. Two
+  fixes would drop two frames instead of one.
 - The bridge's final pass always transcribes the whole utterance; partials are
   tentative and must be replaced, never appended.
 - The model id is machine-local; regenerate it with `hex model import` on
